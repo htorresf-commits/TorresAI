@@ -1,0 +1,63 @@
+
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090909">
+<title>TorresAI</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080808;color:#eee;font:16px system-ui;min-height:100vh}
+header{height:62px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:#101010;border-bottom:1px solid #292929}
+h1{font-size:20px;margin:0}.dot{color:#e31b23}button{background:#191919;color:#fff;border:1px solid #333;border-radius:12px;padding:10px 13px;font-weight:700;cursor:pointer}.red{background:#d71920;border:0}
+main{max-width:850px;margin:auto;height:calc(100vh - 62px);display:flex;flex-direction:column}
+#status{text-align:center;color:#aaa;font-size:12px;padding:8px}#chat{flex:1;overflow:auto;padding:10px 14px}
+.m{padding:12px 14px;margin:8px 0;border-radius:17px;max-width:82%;white-space:pre-wrap;line-height:1.45}.u{margin-left:auto;background:#8e1118}.a{background:#151515;border:1px solid #292929}
+.bar{display:flex;gap:7px;padding:10px;background:#0d0d0d;border-top:1px solid #292929}
+textarea{flex:1;background:#181818;color:#fff;border:1px solid #333;border-radius:14px;padding:12px;font:inherit;resize:none}
+.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:16px}.card{background:#111;border:1px solid #333;border-radius:18px;padding:18px;width:min(560px,100%)}
+input,.card textarea{width:100%;background:#181818;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;margin:6px 0 14px}.row{display:flex;gap:8px;justify-content:flex-end}.small{font-size:12px;color:#aaa}
+</style>
+</head>
+<body>
+<header><h1><span class="dot">●</span> TorresAI</h1><button id="set">⚙️</button></header>
+<main><div id="status"></div><div id="chat"></div>
+<div class="bar"><button id="mic">🎙️</button><textarea id="in" rows="1" placeholder="Habla con Torres…"></textarea><button class="red" id="go">➤</button></div></main>
+<div class="modal" id="modal"><div class="card"><h2>Ajustes de Torres</h2>
+<label>Nombre</label><input id="nm">
+<label>Personalidad</label><textarea id="per" rows="4"></textarea>
+<label><input type="checkbox" id="mem"> Guardar memoria local</label>
+<p class="small">La memoria se guarda en este navegador.</p>
+<div class="row"><button id="clr">Borrar memoria</button><button id="save" class="red">Guardar</button></div>
+</div></div>
+<script>
+const $=x=>document.querySelector(x);
+let cfg=JSON.parse(localStorage.getItem('torres_cfg')||'null')||{name:'Torres',per:'Eres Torres, un asistente amable, inteligente, paciente y respetuoso. Responde en español con claridad y no inventes datos.',mem:true};
+let h=JSON.parse(localStorage.getItem('torres_hist')||'[]');
+function store(){localStorage.setItem('torres_cfg',JSON.stringify(cfg));localStorage.setItem('torres_hist',JSON.stringify(h.slice(-30)))}
+function add(user,t){let d=document.createElement('div');d.className='m '+(user?'u':'a');d.textContent=t;$('#chat').append(d);$('#chat').scrollTop=1e9}
+function render(){$('#chat').innerHTML='';h.length?h.forEach(x=>add(x.role==='user',x.content)):add(false,`Hola, soy ${cfg.name}. Estoy listo para ayudarte.`)}
+function local(){return 'Estoy en modo offline. Puedo seguir conversando contigo, pero para respuestas de IA más completas necesito conexión a Internet.'}
+async function ask(t){
+ let msgs=[{role:'system',content:cfg.per}];
+ if(cfg.mem)msgs.push({role:'system',content:h.slice(-10).map(x=>x.role+': '+x.content).join('\\n')});
+ msgs.push({role:'user',content:t});
+ let r=await fetch('https://text.pollinations.ai/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,model:'openai'})});
+ if(!r.ok)throw Error(); return (await r.text()).trim()
+}
+async function send(){
+ let t=$('#in').value.trim();if(!t)return;$('#in').value='';
+ h.push({role:'user',content:t});add(true,t);let d=document.createElement('div');d.className='m a';d.textContent='…';$('#chat').append(d);
+ try{d.textContent=navigator.onLine?await ask(t):local()}catch(e){d.textContent=local()}
+ h.push({role:'assistant',content:d.textContent});store();
+ if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(d.textContent);u.lang='es-ES';speechSynthesis.speak(u)}
+}
+function net(){$('#status').textContent=navigator.onLine?'🟢 Online':'🔴 Offline'}
+addEventListener('online',net);addEventListener('offline',net);net();render();
+$('#go').onclick=send;$('#in').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};
+$('#mic').onclick=()=>{let S=window.SpeechRecognition||window.webkitSpeechRecognition;if(!S)return alert('El reconocimiento de voz no está disponible.');let r=new S;r.lang='es-ES';r.onresult=e=>{$('#in').value=e.results[0][0].transcript;send()};r.start()};
+$('#set').onclick=()=>{$('#nm').value=cfg.name;$('#per').value=cfg.per;$('#mem').checked=cfg.mem;$('#modal').style.display='flex'};
+$('#save').onclick=()=>{cfg.name=$('#nm').value||'Torres';cfg.per=$('#per').value||cfg.per;cfg.mem=$('#mem').checked;store();$('#modal').style.display='none';render()};
+$('#clr').onclick=()=>{h=[];store();render()};
+</script>
+</body>
+</html>
