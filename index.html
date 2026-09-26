@@ -1,245 +1,681 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090909">
-<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080808">
 <title>TorresAI</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080808;color:#eee;font:16px system-ui;min-height:100vh}
-header{height:62px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:#101010;border-bottom:1px solid #292929}
-h1{font-size:20px;margin:0}.dot{color:#e31b23}
-button{background:#191919;color:#fff;border:1px solid #333;border-radius:12px;padding:10px 13px;font-weight:700;cursor:pointer}
-.red{background:#d71920;border:0}
-main{max-width:900px;margin:auto;height:calc(100vh - 62px);display:flex;flex-direction:column}
-#status{text-align:center;color:#aaa;font-size:12px;padding:8px}
-#chat{flex:1;overflow:auto;padding:10px 14px}
-.m{padding:12px 14px;margin:8px 0;border-radius:17px;max-width:88%;white-space:pre-wrap;line-height:1.45}
-.u{margin-left:auto;background:#8e1118}.a{background:#151515;border:1px solid #292929}
-.webmark{display:inline-block;font-size:11px;color:#ff6b70;margin-bottom:4px}
-.bar{display:flex;gap:7px;padding:10px;background:#0d0d0d;border-top:1px solid #292929}
-textarea{flex:1;background:#181818;color:#fff;border:1px solid #333;border-radius:14px;padding:12px;font:inherit;resize:none}
-.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:16px}
-.card{background:#111;border:1px solid #333;border-radius:18px;padding:18px;width:min(560px,100%)}
-input,.card textarea{width:100%;background:#181818;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;margin:6px 0 14px}
-.row{display:flex;gap:8px;justify-content:flex-end}.small{font-size:12px;color:#aaa}
-.tools{display:flex;gap:6px;padding:8px 10px 0;background:#0d0d0d}
-.tool{font-size:12px;padding:7px 10px}
-.active{outline:2px solid #d71920}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#080808;
+ color:white;
+}
+header{
+ background:linear-gradient(135deg,#8b0000,#e00000);
+ padding:18px;
+ text-align:center;
+ box-shadow:0 3px 15px #000;
+}
+header h1{margin:0;font-size:28px}
+header p{margin:5px 0 0;opacity:.85}
+
+#status{
+ text-align:center;
+ padding:8px;
+ background:#151515;
+ font-size:13px;
+}
+
+main{
+ max-width:900px;
+ margin:auto;
+ padding:15px;
+}
+
+#chat{
+ min-height:55vh;
+ max-height:65vh;
+ overflow-y:auto;
+ padding:10px;
+}
+
+.msg{
+ padding:12px 15px;
+ border-radius:15px;
+ margin:10px 0;
+ max-width:85%;
+ white-space:pre-wrap;
+ word-wrap:break-word;
+}
+
+.user{
+ margin-left:auto;
+ background:#b00000;
+}
+
+.bot{
+ margin-right:auto;
+ background:#202020;
+ border:1px solid #3a3a3a;
+}
+
+.system{
+ margin:auto;
+ background:#151515;
+ color:#aaa;
+ font-size:13px;
+}
+
+.controls{
+ display:flex;
+ gap:8px;
+ margin-top:10px;
+}
+
+textarea{
+ flex:1;
+ resize:none;
+ min-height:55px;
+ padding:13px;
+ border-radius:12px;
+ border:1px solid #444;
+ background:#151515;
+ color:white;
+ font-size:16px;
+}
+
+button{
+ border:0;
+ border-radius:12px;
+ padding:12px 15px;
+ background:#d00000;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+button:hover{background:#f00000}
+
+.secondary{
+ background:#252525;
+}
+
+.panel{
+ margin-top:15px;
+ background:#121212;
+ border:1px solid #333;
+ border-radius:15px;
+ padding:15px;
+}
+
+.panel h2{
+ margin-top:0;
+ color:#ff3030;
+}
+
+label{
+ display:block;
+ margin:10px 0;
+}
+
+input,select{
+ width:100%;
+ padding:10px;
+ border-radius:8px;
+ border:1px solid #444;
+ background:#1b1b1b;
+ color:white;
+}
+
+.hidden{display:none}
+
+#imageResult img{
+ max-width:100%;
+ border-radius:12px;
+ margin-top:10px;
+}
+
+.small{
+ font-size:12px;
+ color:#999;
+}
 </style>
 </head>
+
 <body>
-<header><h1><span class="dot">●</span> TorresAI</h1><button id="set">⚙️</button></header>
+
+<header>
+<h1>🤖 TorresAI</h1>
+<p>Tu asistente personal</p>
+</header>
+
+<div id="status">🟢 Comprobando conexión...</div>
+
 <main>
-<div id="status"></div>
+
 <div id="chat"></div>
-<div class="tools">
-  <button class="tool" id="web">🌐 Buscar en Internet: OFF</button>
+
+<div class="controls">
+<textarea id="input" placeholder="Escribe a Torres..."></textarea>
+<button onclick="sendMessage()">Enviar</button>
+<button class="secondary" onclick="listen()">🎤</button>
 </div>
-<div class="bar">
-  <button id="mic">🎙️</button>
-  <textarea id="in" rows="1" placeholder="Habla con Torres…"></textarea>
-  <button class="red" id="go">➤</button>
+
+<div class="controls">
+<button class="secondary" onclick="toggleSettings()">⚙️ Configuración</button>
+<button class="secondary" onclick="generateImage()">🎨 Imagen</button>
+<button class="secondary" onclick="clearChat()">🗑️ Chat</button>
 </div>
+
+<div id="settings" class="panel hidden">
+
+<h2>⚙️ Configuración</h2>
+
+<label>
+Nombre de la IA
+<input id="aiName" value="Torres">
+</label>
+
+<label>
+Personalidad
+<input id="personality"
+value="Amable, inteligente, cercana, respetuosa y útil. Actúa como un asistente personal.">
+</label>
+
+<label>
+<input type="checkbox" id="voice">
+ 🔊 Responder con voz
+</label>
+
+<label>
+<input type="checkbox" id="autoLearn" checked>
+ 🧠 Automejora controlada
+</label>
+
+<label>
+<input type="checkbox" id="webSearch" checked>
+ 🌐 Buscar información en Internet cuando sea necesario
+</label>
+
+<label>
+<input type="checkbox" id="offlineMode">
+ 📱 Forzar modo offline
+</label>
+
+<label>
+Velocidad de voz
+<input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1">
+</label>
+
+<button onclick="saveSettings()">Guardar configuración</button>
+<button class="secondary" onclick="deleteMemory()">Borrar memoria</button>
+<button class="secondary" onclick="deleteLearning()">Borrar aprendizaje</button>
+
+<p class="small">
+La memoria y el aprendizaje se guardan localmente en este navegador.
+</p>
+
+</div>
+
+<div id="imagePanel" class="panel hidden">
+
+<h2>🎨 Generador de imágenes</h2>
+
+<input id="imagePrompt"
+placeholder="Describe la imagen que quieres crear">
+
+<br><br>
+
+<button onclick="createImage()">Generar imagen</button>
+
+<div id="imageResult"></div>
+
+</div>
+
 </main>
 
-<div class="modal" id="modal"><div class="card">
-<h2>Ajustes de Torres</h2><p style="font-size:13px;opacity:.8">🎨 La generación de imágenes funciona cuando hay Internet y depende de un servicio externo.</p>
-<label>Nombre</label><input id="nm">
-<label>Personalidad</label><textarea id="per" rows="4"></textarea>
-<label><input type="checkbox" id="mem"> Guardar memoria local</label>
-<p class="small">La memoria se guarda en este navegador. No se envía como una lista separada.</p>
-<div class="row"><button id="clr">Borrar memoria</button><button id="save" class="red">Guardar</button></div>
-</div></div>
-
 <script>
-const $=x=>document.querySelector(x);
-let cfg=JSON.parse(localStorage.getItem('torres_cfg')||'null')||{
-  name:'Torres',
-  per:'Eres Torres, un asistente amable, inteligente, paciente y respetuoso. Responde en español con claridad, distingue hechos de opiniones y no inventes datos.',
-  mem:true
+
+const STORAGE_CONFIG="torres_config";
+const STORAGE_MEMORY="torres_memory";
+const STORAGE_LEARN="torres_learning";
+
+let config=JSON.parse(localStorage.getItem(STORAGE_CONFIG)||"null")||{
+ name:"Torres",
+ personality:"Amable, inteligente, cercana, respetuosa y útil. Actúa como un asistente personal.",
+ voice:true,
+ autoLearn:true,
+ webSearch:true,
+ offline:false,
+ voiceRate:1
 };
-let h=JSON.parse(localStorage.getItem('torres_hist')||'[]');
-let forceWeb=false;
 
-function store(){
-  localStorage.setItem('torres_cfg',JSON.stringify(cfg));
-  localStorage.setItem('torres_hist',JSON.stringify(h.slice(-40)));
+let memory=JSON.parse(localStorage.getItem(STORAGE_MEMORY)||"[]");
+let learning=JSON.parse(localStorage.getItem(STORAGE_LEARN)||"[]");
+
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+
+function saveAll(){
+ localStorage.setItem(STORAGE_CONFIG,JSON.stringify(config));
+ localStorage.setItem(STORAGE_MEMORY,JSON.stringify(memory));
+ localStorage.setItem(STORAGE_LEARN,JSON.stringify(learning));
 }
-function add(user,t,web=false){
-  let d=document.createElement('div');
-  d.className='m '+(user?'u':'a');
-  if(web&&!user){
-    let mark=document.createElement('div');
-    mark.className='webmark';
-    mark.textContent='🌐 Respuesta con búsqueda web';
-    d.append(mark);
-  }
-  let txt=document.createElement('div');
-  txt.textContent=t;
-  d.append(txt);
-  $('#chat').append(d);
-  $('#chat').scrollTop=1e9;
+
+function addMessage(text,type){
+ const div=document.createElement("div");
+ div.className="msg "+type;
+ div.textContent=text;
+ chat.appendChild(div);
+ chat.scrollTop=chat.scrollHeight;
 }
-function render(){
-  $('#chat').innerHTML='';
-  if(h.length) h.forEach(x=>add(x.role==='user',x.content,x.web));
-  else add(false,`Hola, soy ${cfg.name}. Estoy listo para ayudarte.`);
+
+function welcome(){
+ if(!chat.children.length){
+  addMessage(
+   "Hola 👋 Soy Torres. Estoy listo para ayudarte. Puedes hablar conmigo, usar el micrófono, guardar cosas en mi memoria, buscar información o generar imágenes.",
+   "bot"
+  );
+ }
 }
-function local(){
-  return 'Estoy en modo offline. Puedo seguir conversando contigo, pero para respuestas de IA y búsquedas web necesito conexión a Internet.';
+
+function updateStatus(){
+ const online=navigator.onLine&&!config.offline;
+
+ document.getElementById("status").textContent=
+ online
+ ? "🟢 Online"
+ : "🔴 Offline";
 }
-function looksLikeSearch(t){
-  return /^(busca|buscar|búscame|mira|consulta|investiga|qué ha pasado|que ha pasado|últimas|ultimas|noticias|hoy|actualmente|precio actual|tiempo|clima|quién ganó|quien gano|cuándo es|cuando es|dónde está|donde esta|qué es lo último|que es lo ultimo)\b/i.test(t.trim())
-    || /\b(en internet|en la web|web|internet|noticias|último|última|actual|actuales|reciente|recientes)\b/i.test(t);
+
+window.addEventListener("online",updateStatus);
+window.addEventListener("offline",updateStatus);
+
+function toggleSettings(){
+ document.getElementById("settings").classList.toggle("hidden");
+ loadSettings();
 }
-async function ask(t, useWeb){
-  let msgs=[{role:'system',content:cfg.per}];
-  if(cfg.mem && h.length){
-    msgs.push({role:'system',content:'Contexto de conversación reciente:\\n'+h.slice(-10).map(x=>x.role+': '+x.content).join('\\n')});
-  }
-  if(useWeb){
-    msgs.push({role:'system',content:'Necesitas responder usando búsqueda web actual. Busca información reciente y verificable. Si das datos que puedan cambiar, indica la fecha o el contexto temporal. No inventes fuentes ni resultados. Si no puedes realizar la búsqueda, dilo claramente.'});
-  }
-  msgs.push({role:'user',content:t});
-  const model=useWeb?'gemini-search':'openai';
-  let r=await fetch('https://text.pollinations.ai/',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:msgs,model:model})
+
+function loadSettings(){
+ document.getElementById("aiName").value=config.name;
+ document.getElementById("personality").value=config.personality;
+ document.getElementById("voice").checked=config.voice;
+ document.getElementById("autoLearn").checked=config.autoLearn;
+ document.getElementById("webSearch").checked=config.webSearch;
+ document.getElementById("offlineMode").checked=config.offline;
+ document.getElementById("voiceRate").value=config.voiceRate;
+}
+
+function saveSettings(){
+ config.name=document.getElementById("aiName").value||"Torres";
+ config.personality=document.getElementById("personality").value;
+ config.voice=document.getElementById("voice").checked;
+ config.autoLearn=document.getElementById("autoLearn").checked;
+ config.webSearch=document.getElementById("webSearch").checked;
+ config.offline=document.getElementById("offlineMode").checked;
+ config.voiceRate=parseFloat(document.getElementById("voiceRate").value);
+
+ if(!config.voice){
+  speechSynthesis.cancel();
+ }
+
+ saveAll();
+ updateStatus();
+
+ addMessage("Configuración guardada.", "system");
+}
+
+function deleteMemory(){
+ memory=[];
+ saveAll();
+ addMessage("Memoria borrada.", "system");
+}
+
+function deleteLearning(){
+ learning=[];
+ saveAll();
+ addMessage("Aprendizaje borrado.", "system");
+}
+
+function clearChat(){
+ chat.innerHTML="";
+ welcome();
+}
+
+function speak(text){
+
+ if(!config.voice) return;
+
+ if(!("speechSynthesis" in window)) return;
+
+ speechSynthesis.cancel();
+
+ const u=new SpeechSynthesisUtterance(text);
+ u.lang="es-ES";
+ u.rate=config.voiceRate;
+ u.volume=1;
+
+ speechSynthesis.speak(u);
+}
+
+function listen(){
+
+ const SpeechRecognition=
+ window.SpeechRecognition||
+ window.webkitSpeechRecognition;
+
+ if(!SpeechRecognition){
+  addMessage("El reconocimiento de voz no está disponible en este navegador.","system");
+  return;
+ }
+
+ const recognition=new SpeechRecognition();
+
+ recognition.lang="es-ES";
+ recognition.interimResults=false;
+ recognition.maxAlternatives=1;
+
+ recognition.onstart=()=>{
+  addMessage("🎤 Escuchando...", "system");
+ };
+
+ recognition.onresult=e=>{
+  input.value=e.results[0][0].transcript;
+ };
+
+ recognition.onerror=()=>{
+  addMessage("No pude utilizar el micrófono.","system");
+ };
+
+ recognition.start();
+}
+
+function detectLearning(text){
+
+ if(!config.autoLearn) return;
+
+ const lower=text.toLowerCase();
+
+ const patterns=[
+  "recuerda que",
+  "recuerda",
+  "mi nombre es",
+  "prefiero",
+  "me gusta",
+  "no me gusta",
+  "quiero que"
+ ];
+
+ if(patterns.some(x=>lower.includes(x))){
+  learning.push({
+   text:text,
+   date:new Date().toISOString()
   });
-  if(!r.ok) throw Error('API '+r.status);
-  return (await r.text()).trim();
+
+  if(learning.length>50)
+   learning=learning.slice(-50);
+
+  saveAll();
+ }
 }
 
-function toggleImagePanel(){
-  const p = document.getElementById("imagePanel");
-  p.style.display = p.style.display === "none" ? "block" : "none";
+function detectMemoryCommand(text){
+
+ const lower=text.toLowerCase();
+
+ if(lower.startsWith("recuerda que ")){
+  const info=text.substring(13).trim();
+
+  if(info){
+   memory.push(info);
+
+   if(memory.length>100)
+    memory=memory.slice(-100);
+
+   saveAll();
+
+   return "He guardado eso en mi memoria local.";
+  }
+ }
+
+ if(lower==="qué recuerdas"||lower==="que recuerdas"){
+  if(!memory.length)
+   return "No tengo recuerdos guardados todavía.";
+
+  return "Esto es lo que recuerdo:\n\n• "+memory.join("\n• ");
+ }
+
+ return null;
+}
+
+function needsWeb(text){
+
+ if(!config.webSearch) return false;
+ if(!navigator.onLine||config.offline) return false;
+
+ const words=[
+  "hoy",
+  "ahora",
+  "actual",
+  "actualmente",
+  "últimas noticias",
+  "noticias",
+  "tiempo",
+  "clima",
+  "precio",
+  "precios",
+  "cotización",
+  "qué pasó",
+  "que paso",
+  "quién es",
+  "quien es",
+  "último",
+  "última",
+  "últimos",
+  "últimas",
+  "2026"
+ ];
+
+ const lower=text.toLowerCase();
+
+ return words.some(w=>lower.includes(w));
+}
+
+async function sendMessage(){
+
+ const text=input.value.trim();
+
+ if(!text)return;
+
+ input.value="";
+
+ addMessage(text,"user");
+
+ detectLearning(text);
+
+ const mem=detectMemoryCommand(text);
+
+ if(mem){
+  addMessage(mem,"bot");
+  speak(mem);
+  return;
+ }
+
+ const lower=text.toLowerCase();
+
+ if(
+  lower.includes("hola")||
+  lower.includes("buenas")||
+  lower==="hey"
+ ){
+  const answer="¡Hola! 👋 Soy "+config.name+". ¿En qué te ayudo?";
+  addMessage(answer,"bot");
+  speak(answer);
+  return;
+ }
+
+ if(lower.includes("cómo te llamas")||lower.includes("como te llamas")){
+  const answer="Me llamo "+config.name+".";
+  addMessage(answer,"bot");
+  speak(answer);
+  return;
+ }
+
+ addMessage("⏳ Pensando...","system");
+
+ try{
+
+  const answer=await askAI(text);
+
+  const systems=document.querySelectorAll(".system");
+  if(systems.length)
+   systems[systems.length-1].remove();
+
+  addMessage(answer,"bot");
+  speak(answer);
+
+ }catch(error){
+
+  const systems=document.querySelectorAll(".system");
+  if(systems.length)
+   systems[systems.length-1].remove();
+
+  const answer=
+   "Ahora mismo no puedo acceder al servicio de IA online. "+
+   "Puedo seguir funcionando con mis funciones locales.";
+
+  addMessage(answer,"bot");
+  speak(answer);
+ }
+}
+
+async function askAI(text){
+
+ const online=navigator.onLine&&!config.offline;
+
+ if(!online){
+  return offlineAnswer(text);
+ }
+
+ /*
+  TorresAI intenta usar un servicio externo gratuito.
+  Estos servicios pueden cambiar sus condiciones o requerir
+  autenticación en el futuro.
+ */
+
+ const mode=needsWeb(text)?"gemini-search":"openai";
+
+ const system=
+ `Eres ${config.name}, un asistente personal.
+ Personalidad: ${config.personality}
+
+ Memoria local:
+ ${memory.join("\n")}
+
+ Aprendizaje:
+ ${learning.map(x=>x.text).join("\n")}
+
+ Responde en español salvo que el usuario pida otro idioma.
+ Sé claro, útil y respetuoso.
+ No inventes información.
+ ${needsWeb(text)
+ ? "Si tienes acceso a búsqueda web, utiliza información actual."
+ : ""}`;
+
+ const url=
+ "https://text.pollinations.ai/"+
+ encodeURIComponent(
+  system+"\n\nUsuario: "+text
+ )+
+ "?model="+encodeURIComponent(mode);
+
+ const response=await fetch(url);
+
+ if(!response.ok)
+  throw new Error("Servicio no disponible");
+
+ const result=await response.text();
+
+ if(!result.trim())
+  throw new Error("Respuesta vacía");
+
+ return result.trim();
+}
+
+function offlineAnswer(text){
+
+ const lower=text.toLowerCase();
+
+ if(lower.includes("hora")){
+  return "Puedo ayudarte con muchas tareas locales, pero para información actual como la hora exacta necesito consultar una fuente online.";
+ }
+
+ if(lower.includes("matemática")||
+    lower.includes("matematicas")||
+    lower.includes("cuánto es")||
+    lower.includes("cuanto es")){
+
+  try{
+   const expression=text
+    .replace(/[^0-9+\-*/().]/g,"");
+
+   if(expression){
+    const result=Function(
+     '"use strict";return ('+expression+')'
+    )();
+
+    return "Resultado: "+result;
+   }
+  }catch(e){}
+ }
+
+ return "Estoy en modo offline. Puedo utilizar mi memoria local, configuración, voz y algunas funciones del dispositivo, pero una conversación de IA completa necesita un modelo local integrado.";
+}
+
+function generateImage(){
+
+ document.getElementById("imagePanel")
+  .classList.toggle("hidden");
 }
 
 function createImage(){
-  const input = document.getElementById("imagePrompt");
-  const status = document.getElementById("imageStatus");
-  const prompt = input.value.trim();
-  if(!prompt){
-    status.textContent = "Escribe una descripción primero.";
-    return;
-  }
-  if(!navigator.onLine){
-    status.textContent = "🔴 La creación de imágenes necesita conexión a Internet.";
-    return;
-  }
 
-  status.textContent = "Generando imagen…";
-  const encoded = encodeURIComponent(prompt);
-  const url = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=1024&nologo=true";
+ const prompt=document.getElementById("imagePrompt").value.trim();
 
-  const chat = document.getElementById("chat");
-  const wrap = document.createElement("div");
-  wrap.className = "msg ai";
-  const title = document.createElement("div");
-  title.className = "web";
-  title.textContent = "🎨 Imagen generada";
-  wrap.appendChild(title);
+ if(!prompt)return;
 
-  const img = document.createElement("img");
-  img.src = url;
-  img.alt = prompt;
-  img.style.maxWidth = "100%";
-  img.style.borderRadius = "14px";
-  img.style.marginTop = "8px";
-  img.loading = "lazy";
+ if(!navigator.onLine){
+  document.getElementById("imageResult").innerHTML=
+   "<p>Necesitas conexión a Internet para generar imágenes.</p>";
+  return;
+ }
 
-  img.onload = () => {
-    status.textContent = "✅ Imagen lista.";
-    wrap.appendChild(document.createElement("br"));
-    chat.appendChild(wrap);
-    chat.scrollTop = chat.scrollHeight;
-  };
+ const url=
+ "https://image.pollinations.ai/prompt/"+
+ encodeURIComponent(prompt)+
+ "?width=1024&height=1024&nologo=true";
 
-  img.onerror = () => {
-    status.textContent = "No se pudo generar la imagen. El servicio puede requerir cambios o no estar disponible.";
-    wrap.remove();
-  };
-
-  wrap.appendChild(img);
-  chat.appendChild(wrap);
-  chat.scrollTop = chat.scrollHeight;
+ document.getElementById("imageResult").innerHTML=
+  "<p>🎨 Generando...</p>"+
+  "<img src='"+url+"' alt='Imagen generada'>";
 }
 
-async function send(){
-  let t=$('#in').value.trim(); if(!t)return;
-  $('#in').value='';
-  const useWeb=forceWeb || looksLikeSearch(t);
-  h.push({role:'user',content:t,web:false});
-  add(true,t);
-  let d=document.createElement('div');
-  d.className='m a'; d.textContent='…'; $('#chat').append(d);
-  try{
-    if(!navigator.onLine) throw Error('offline');
-    d.textContent=await ask(t,useWeb);
-    if(useWeb){
-      let mark=document.createElement('div');
-      mark.className='webmark';
-      mark.textContent='🌐 Respuesta con búsqueda web';
-      d.prepend(mark);
-    }
-  }catch(e){
-    d.textContent=local();
-  }
-  h.push({role:'assistant',content:d.textContent.replace('🌐 Respuesta con búsqueda web','').trim(),web:useWeb});
-  store();
-  if('speechSynthesis' in window){
-    speechSynthesis.cancel();
-    let u=new SpeechSynthesisUtterance(d.textContent);
-    u.lang='es-ES'; speechSynthesis.speak(u);
-  }
-}
-function net(){
-  $('#status').textContent=navigator.onLine?'🟢 Online':'🔴 Offline';
-}
-addEventListener('online',net); addEventListener('offline',net); net(); render();
+input.addEventListener("keydown",e=>{
+ if(e.key==="Enter"&&!e.shiftKey){
+  e.preventDefault();
+  sendMessage();
+ }
+});
 
-$('#go').onclick=send;
-$('#in').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};
-$('#mic').onclick=()=>{
-  let S=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!S)return alert('El reconocimiento de voz no está disponible en este navegador.');
-  let r=new S; r.lang='es-ES';
-  r.onresult=e=>{$('#in').value=e.results[0][0].transcript;send()};
-  r.start();
-};
-$('#web').onclick=()=>{
-  forceWeb=!forceWeb;
-  $('#web').textContent='🌐 Buscar en Internet: '+(forceWeb?'ON':'OFF');
-  $('#web').classList.toggle('active',forceWeb);
-};
-$('#set').onclick=()=>{
-  $('#nm').value=cfg.name; $('#per').value=cfg.per; $('#mem').checked=cfg.mem;
-  $('#modal').style.display='flex';
-};
-$('#save').onclick=()=>{
-  cfg.name=$('#nm').value||'Torres';
-  cfg.per=$('#per').value||cfg.per;
-  cfg.mem=$('#mem').checked;
-  store(); $('#modal').style.display='none'; render();
-};
-$('#clr').onclick=()=>{h=[];store();render()};
+loadSettings();
+updateStatus();
+welcome();
+
 </script>
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("./sw.js").catch(()=>{});
-}
-</script>
+
 </body>
 </html>
-<script>
-if("speechSynthesis" in window){
-  populateVoiceList();
-  if("onvoiceschanged" in speechSynthesis){
-    speechSynthesis.onvoiceschanged = populateVoiceList;
-  }
-}
-</script>
