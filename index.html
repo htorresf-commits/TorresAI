@@ -1,147 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#090909">
+<meta name="description" content="TorresAI - asistente personal">
+<link rel="manifest" href="manifest.json">
 <title>TorresAI</title>
 
+<script src="https://js.puter.com/v2/"></script>
+
 <style>
+:root{color-scheme:dark}
 *{box-sizing:border-box}
+
 body{
  margin:0;
- font-family:Arial,sans-serif;
  background:#080808;
- color:white;
+ color:#f5f5f5;
+ font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif
 }
+
 header{
- background:linear-gradient(135deg,#8b0000,#e00000);
+ background:linear-gradient(135deg,#700000,#e00000);
  padding:18px;
  text-align:center;
- box-shadow:0 3px 15px #000;
+ position:sticky;
+ top:0;
+ z-index:5;
+ box-shadow:0 3px 16px #000
 }
-header h1{margin:0;font-size:28px}
-header p{margin:5px 0 0;opacity:.85}
+
+h1{margin:0;font-size:29px}
+.sub{opacity:.85;margin-top:4px}
 
 #status{
+ background:#151515;
  text-align:center;
  padding:8px;
- background:#151515;
- font-size:13px;
+ font-size:13px
 }
 
 main{
- max-width:900px;
- margin:auto;
- padding:15px;
+ width:min(980px,94%);
+ margin:auto
 }
 
 #chat{
- min-height:55vh;
- max-height:65vh;
- overflow-y:auto;
- padding:10px;
+ height:58vh;
+ overflow:auto;
+ padding:16px 4px
 }
 
 .msg{
- padding:12px 15px;
- border-radius:15px;
+ max-width:88%;
  margin:10px 0;
- max-width:85%;
+ padding:13px 15px;
+ border-radius:17px;
  white-space:pre-wrap;
- word-wrap:break-word;
+ overflow-wrap:anywhere
 }
 
 .user{
  margin-left:auto;
- background:#b00000;
+ background:#c90000
 }
 
 .bot{
- margin-right:auto;
  background:#202020;
- border:1px solid #3a3a3a;
+ border:1px solid #383838
 }
 
 .system{
  margin:auto;
- background:#151515;
+ background:#141414;
  color:#aaa;
  font-size:13px;
+ text-align:center
 }
 
-.controls{
+.row{
  display:flex;
  gap:8px;
- margin-top:10px;
+ margin:8px 0
 }
+
+.row>*{min-width:0}
 
 textarea{
  flex:1;
+ min-height:58px;
  resize:none;
- min-height:55px;
- padding:13px;
- border-radius:12px;
+ padding:14px;
+ border-radius:13px;
  border:1px solid #444;
  background:#151515;
- color:white;
- font-size:16px;
+ color:#fff;
+ font-size:16px
 }
 
 button{
  border:0;
  border-radius:12px;
- padding:12px 15px;
+ padding:11px 14px;
  background:#d00000;
- color:white;
- font-weight:bold;
- cursor:pointer;
+ color:#fff;
+ font-weight:700;
+ cursor:pointer
 }
 
-button:hover{background:#f00000}
+button.secondary{
+ background:#292929
+}
 
-.secondary{
- background:#252525;
+button:disabled{
+ opacity:.5;
+ cursor:not-allowed
 }
 
 .panel{
- margin-top:15px;
  background:#121212;
  border:1px solid #333;
  border-radius:15px;
  padding:15px;
-}
-
-.panel h2{
- margin-top:0;
- color:#ff3030;
-}
-
-label{
- display:block;
- margin:10px 0;
-}
-
-input,select{
- width:100%;
- padding:10px;
- border-radius:8px;
- border:1px solid #444;
- background:#1b1b1b;
- color:white;
+ margin:12px 0
 }
 
 .hidden{display:none}
 
-#imageResult img{
- max-width:100%;
- border-radius:12px;
- margin-top:10px;
+label{
+ display:block;
+ margin:13px 0
+}
+
+input[type=text],select{
+ width:100%;
+ padding:10px;
+ border-radius:9px;
+ border:1px solid #444;
+ background:#1c1c1c;
+ color:#fff
 }
 
 .small{
  font-size:12px;
- color:#999;
+ color:#999
+}
+
+.preview{
+ max-width:100%;
+ max-height:420px;
+ border-radius:12px;
+ margin-top:10px
 }
 </style>
 </head>
@@ -150,26 +160,55 @@ input,select{
 
 <header>
 <h1>🤖 TorresAI</h1>
-<p>Tu asistente personal</p>
+<div class="sub">Tu asistente personal</div>
 </header>
 
-<div id="status">🟢 Comprobando conexión...</div>
+<div id="status">⏳ Comprobando conexión…</div>
 
 <main>
 
 <div id="chat"></div>
 
-<div class="controls">
-<textarea id="input" placeholder="Escribe a Torres..."></textarea>
-<button onclick="sendMessage()">Enviar</button>
-<button class="secondary" onclick="listen()">🎤</button>
+<div class="row">
+
+<textarea
+id="input"
+placeholder="Escribe a Torres…"></textarea>
+
+<button id="send">Enviar</button>
+
+<button class="secondary" id="mic">🎤</button>
+
 </div>
 
-<div class="controls">
-<button class="secondary" onclick="toggleSettings()">⚙️ Configuración</button>
-<button class="secondary" onclick="generateImage()">🎨 Imagen</button>
-<button class="secondary" onclick="clearChat()">🗑️ Chat</button>
+<div class="row">
+
+<button class="secondary" id="settingsBtn">
+⚙️ Configuración
+</button>
+
+<button class="secondary" id="imageBtn">
+🎨 Imagen
+</button>
+
+<button class="secondary" id="fileBtn">
+📎 Archivo
+</button>
+
+<button class="secondary" id="clearBtn">
+🗑️ Chat
+</button>
+
+<input
+id="fileInput"
+type="file"
+hidden
+accept="image/*,.txt,.md,.json,.csv">
+
 </div>
+
+
+<!-- CONFIGURACIÓN -->
 
 <div id="settings" class="panel hidden">
 
@@ -177,503 +216,1227 @@ input,select{
 
 <label>
 Nombre de la IA
-<input id="aiName" value="Torres">
+<input id="aiName" type="text">
 </label>
 
 <label>
 Personalidad
-<input id="personality"
-value="Amable, inteligente, cercana, respetuosa y útil. Actúa como un asistente personal.">
+<input id="personality" type="text">
 </label>
 
 <label>
-<input type="checkbox" id="voice">
- 🔊 Responder con voz
+<input id="voice" type="checkbox">
+🔊 Responder con voz
 </label>
 
 <label>
-<input type="checkbox" id="autoLearn" checked>
- 🧠 Automejora controlada
+<input id="web" type="checkbox">
+🌐 Usar búsqueda web cuando haga falta
 </label>
 
 <label>
-<input type="checkbox" id="webSearch" checked>
- 🌐 Buscar información en Internet cuando sea necesario
+<input id="learn" type="checkbox">
+🧠 Aprendizaje controlado
 </label>
 
 <label>
-<input type="checkbox" id="offlineMode">
- 📱 Forzar modo offline
+<input id="offline" type="checkbox">
+📴 Forzar modo offline
 </label>
 
 <label>
 Velocidad de voz
-<input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1">
+<input
+id="rate"
+type="range"
+min=".6"
+max="1.6"
+step=".1">
 </label>
 
-<button onclick="saveSettings()">Guardar configuración</button>
-<button class="secondary" onclick="deleteMemory()">Borrar memoria</button>
-<button class="secondary" onclick="deleteLearning()">Borrar aprendizaje</button>
+<button id="saveSettings">
+Guardar
+</button>
+
+<button class="secondary" id="deleteMemory">
+Borrar memoria
+</button>
+
+<button class="secondary" id="deleteLearning">
+Borrar aprendizaje
+</button>
 
 <p class="small">
-La memoria y el aprendizaje se guardan localmente en este navegador.
+La memoria y preferencias se guardan en este navegador.
+El aprendizaje guarda preferencias y correcciones que tú le indiques;
+no modifica arbitrariamente el código de la aplicación.
 </p>
 
 </div>
 
+
+<!-- IMÁGENES -->
+
 <div id="imagePanel" class="panel hidden">
 
-<h2>🎨 Generador de imágenes</h2>
+<h2>🎨 Generar imagen</h2>
 
-<input id="imagePrompt"
-placeholder="Describe la imagen que quieres crear">
+<input
+id="imagePrompt"
+type="text"
+placeholder="Describe la imagen…">
 
 <br><br>
 
-<button onclick="createImage()">Generar imagen</button>
+<button id="generateImage">
+Crear imagen
+</button>
 
 <div id="imageResult"></div>
 
 </div>
 
+
+<!-- ARCHIVOS -->
+
+<div id="filePanel" class="panel hidden">
+
+<h2>📎 Archivo</h2>
+
+<p id="fileInfo" class="small">
+Selecciona una imagen o archivo de texto.
+</p>
+
+<div id="fileResult"></div>
+
+</div>
+
 </main>
+
 
 <script>
 
-const STORAGE_CONFIG="torres_config";
-const STORAGE_MEMORY="torres_memory";
-const STORAGE_LEARN="torres_learning";
-
-let config=JSON.parse(localStorage.getItem(STORAGE_CONFIG)||"null")||{
- name:"Torres",
- personality:"Amable, inteligente, cercana, respetuosa y útil. Actúa como un asistente personal.",
- voice:true,
- autoLearn:true,
- webSearch:true,
- offline:false,
- voiceRate:1
+const K={
+ cfg:"torres_cfg_v5",
+ mem:"torres_mem_v5",
+ learn:"torres_learn_v5",
+ hist:"torres_hist_v5"
 };
 
-let memory=JSON.parse(localStorage.getItem(STORAGE_MEMORY)||"[]");
-let learning=JSON.parse(localStorage.getItem(STORAGE_LEARN)||"[]");
 
-const chat=document.getElementById("chat");
-const input=document.getElementById("input");
+let cfg=Object.assign({
 
-function saveAll(){
- localStorage.setItem(STORAGE_CONFIG,JSON.stringify(config));
- localStorage.setItem(STORAGE_MEMORY,JSON.stringify(memory));
- localStorage.setItem(STORAGE_LEARN,JSON.stringify(learning));
+ name:"Torres",
+
+ personality:
+ "Amable, inteligente, cercana, respetuosa y útil. Actúa como un asistente personal.",
+
+ voice:true,
+
+ web:true,
+
+ learn:true,
+
+ offline:false,
+
+ rate:1
+
+},
+JSON.parse(
+ localStorage.getItem(K.cfg)||"{}"
+));
+
+
+let memory=
+JSON.parse(
+ localStorage.getItem(K.mem)||"[]"
+);
+
+
+let learning=
+JSON.parse(
+ localStorage.getItem(K.learn)||"[]"
+);
+
+
+let history=
+JSON.parse(
+ localStorage.getItem(K.hist)||"[]"
+);
+
+
+const $=id=>
+ document.getElementById(id);
+
+const chat=$("chat");
+
+
+/* =========================
+   GUARDAR DATOS
+========================= */
+
+function persist(){
+
+ localStorage.setItem(
+  K.cfg,
+  JSON.stringify(cfg)
+ );
+
+ localStorage.setItem(
+  K.mem,
+  JSON.stringify(memory)
+ );
+
+ localStorage.setItem(
+  K.learn,
+  JSON.stringify(learning)
+ );
+
+ localStorage.setItem(
+  K.hist,
+  JSON.stringify(
+   history.slice(-30)
+  )
+ );
+
 }
 
-function addMessage(text,type){
- const div=document.createElement("div");
- div.className="msg "+type;
- div.textContent=text;
- chat.appendChild(div);
- chat.scrollTop=chat.scrollHeight;
-}
 
-function welcome(){
- if(!chat.children.length){
-  addMessage(
-   "Hola 👋 Soy Torres. Estoy listo para ayudarte. Puedes hablar conmigo, usar el micrófono, guardar cosas en mi memoria, buscar información o generar imágenes.",
-   "bot"
-  );
+/* =========================
+   MOSTRAR MENSAJES
+========================= */
+
+function add(
+ text,
+ type,
+ save=true
+){
+
+ const d=
+ document.createElement("div");
+
+ d.className=
+ "msg "+type;
+
+ d.textContent=text;
+
+ chat.appendChild(d);
+
+ chat.scrollTop=
+ chat.scrollHeight;
+
+ if(
+  save &&
+  type!=="system"
+ ){
+
+  history.push({
+
+   role:
+    type==="user"
+    ?"user"
+    :"assistant",
+
+   content:text
+
+  });
+
+  persist();
+
  }
+
+ return d;
+
 }
 
-function updateStatus(){
- const online=navigator.onLine&&!config.offline;
 
- document.getElementById("status").textContent=
- online
- ? "🟢 Online"
- : "🔴 Offline";
-}
+/* =========================
+   HISTORIAL
+========================= */
 
-window.addEventListener("online",updateStatus);
-window.addEventListener("offline",updateStatus);
+function renderHistory(){
 
-function toggleSettings(){
- document.getElementById("settings").classList.toggle("hidden");
- loadSettings();
-}
-
-function loadSettings(){
- document.getElementById("aiName").value=config.name;
- document.getElementById("personality").value=config.personality;
- document.getElementById("voice").checked=config.voice;
- document.getElementById("autoLearn").checked=config.autoLearn;
- document.getElementById("webSearch").checked=config.webSearch;
- document.getElementById("offlineMode").checked=config.offline;
- document.getElementById("voiceRate").value=config.voiceRate;
-}
-
-function saveSettings(){
- config.name=document.getElementById("aiName").value||"Torres";
- config.personality=document.getElementById("personality").value;
- config.voice=document.getElementById("voice").checked;
- config.autoLearn=document.getElementById("autoLearn").checked;
- config.webSearch=document.getElementById("webSearch").checked;
- config.offline=document.getElementById("offlineMode").checked;
- config.voiceRate=parseFloat(document.getElementById("voiceRate").value);
-
- if(!config.voice){
-  speechSynthesis.cancel();
- }
-
- saveAll();
- updateStatus();
-
- addMessage("Configuración guardada.", "system");
-}
-
-function deleteMemory(){
- memory=[];
- saveAll();
- addMessage("Memoria borrada.", "system");
-}
-
-function deleteLearning(){
- learning=[];
- saveAll();
- addMessage("Aprendizaje borrado.", "system");
-}
-
-function clearChat(){
  chat.innerHTML="";
- welcome();
+
+ if(!history.length){
+
+  add(
+`Hola 👋 Soy ${cfg.name}.
+
+Puedo conversar, buscar información actual, recordar preferencias, usar voz, analizar imágenes y archivos y crear imágenes.`,
+  "bot",
+  false
+  );
+
+ }else{
+
+  history.forEach(m=>{
+
+   add(
+    m.content,
+    m.role==="user"
+    ?"user"
+    :"bot",
+    false
+   );
+
+  });
+
+ }
+
 }
+
+
+/* =========================
+   ESTADO
+========================= */
+
+function status(){
+
+ if(cfg.offline){
+
+  $("status").textContent=
+  "📴 Offline forzado";
+
+  return;
+
+ }
+
+ $("status").textContent=
+ navigator.onLine
+ ?"🟢 Online"
+ :"🔴 Offline";
+
+}
+
+
+window.addEventListener(
+ "online",
+ status
+);
+
+window.addEventListener(
+ "offline",
+ status
+);
+
+
+/* =========================
+   CONFIGURACIÓN
+========================= */
+
+function loadCfg(){
+
+ $("aiName").value=
+  cfg.name;
+
+ $("personality").value=
+  cfg.personality;
+
+ $("voice").checked=
+  cfg.voice;
+
+ $("web").checked=
+  cfg.web;
+
+ $("learn").checked=
+  cfg.learn;
+
+ $("offline").checked=
+  cfg.offline;
+
+ $("rate").value=
+  cfg.rate;
+
+}
+
+
+function saveCfg(){
+
+ cfg.name=
+  $("aiName").value.trim()
+  ||"Torres";
+
+ cfg.personality=
+  $("personality").value.trim()
+  ||"Amable, inteligente y útil.";
+
+ cfg.voice=
+  $("voice").checked;
+
+ cfg.web=
+  $("web").checked;
+
+ cfg.learn=
+  $("learn").checked;
+
+ cfg.offline=
+  $("offline").checked;
+
+ cfg.rate=
+  +$("rate").value;
+
+
+ if(
+  !cfg.voice &&
+  "speechSynthesis" in window
+ ){
+
+  speechSynthesis.cancel();
+
+ }
+
+
+ persist();
+
+ status();
+
+ add(
+  "Configuración guardada.",
+  "system"
+ );
+
+ renderHistory();
+
+}
+
+
+/* =========================
+   VOZ
+========================= */
 
 function speak(text){
 
- if(!config.voice) return;
+ if(
+  !cfg.voice ||
+  !("speechSynthesis" in window)
+ ){
 
- if(!("speechSynthesis" in window)) return;
+  return;
+
+ }
 
  speechSynthesis.cancel();
 
- const u=new SpeechSynthesisUtterance(text);
+ const u=
+ new SpeechSynthesisUtterance(text);
+
  u.lang="es-ES";
- u.rate=config.voiceRate;
- u.volume=1;
+
+ u.rate=
+ cfg.rate;
 
  speechSynthesis.speak(u);
+
 }
 
-function listen(){
 
- const SpeechRecognition=
- window.SpeechRecognition||
- window.webkitSpeechRecognition;
+/* =========================
+   MEMORIA
+========================= */
 
- if(!SpeechRecognition){
-  addMessage("El reconocimiento de voz no está disponible en este navegador.","system");
-  return;
+function remember(text){
+
+ const lower=
+ text.toLowerCase();
+
+
+ if(
+  lower.startsWith(
+   "recuerda que "
+  )
+ ){
+
+  const x=
+   text.slice(13).trim();
+
+
+  if(x){
+
+   memory.push(x);
+
+   memory=
+    memory.slice(-100);
+
+   persist();
+
+   return
+    "He guardado eso en mi memoria local.";
+
+  }
+
  }
 
- const recognition=new SpeechRecognition();
 
- recognition.lang="es-ES";
- recognition.interimResults=false;
- recognition.maxAlternatives=1;
+ if(
+  lower==="qué recuerdas" ||
+  lower==="que recuerdas"
+ ){
 
- recognition.onstart=()=>{
-  addMessage("🎤 Escuchando...", "system");
- };
+  return memory.length
 
- recognition.onresult=e=>{
-  input.value=e.results[0][0].transcript;
- };
+   ? "Recuerdo esto:\n• "+
+     memory.join("\n• ")
 
- recognition.onerror=()=>{
-  addMessage("No pude utilizar el micrófono.","system");
- };
+   : "No tengo recuerdos guardados.";
 
- recognition.start();
+ }
+
+
+ return null;
+
 }
 
-function detectLearning(text){
 
- if(!config.autoLearn) return;
+/* =========================
+   APRENDIZAJE
+========================= */
 
- const lower=text.toLowerCase();
+function learn(text){
 
- const patterns=[
-  "recuerda que",
-  "recuerda",
-  "mi nombre es",
+ if(!cfg.learn)return;
+
+ const lower=
+  text.toLowerCase();
+
+ const triggers=[
   "prefiero",
   "me gusta",
   "no me gusta",
-  "quiero que"
+  "mi nombre es",
+  "quiero que",
+  "aprende que",
+  "recuerda"
  ];
 
- if(patterns.some(x=>lower.includes(x))){
-  learning.push({
-   text:text,
-   date:new Date().toISOString()
-  });
-
-  if(learning.length>50)
-   learning=learning.slice(-50);
-
-  saveAll();
- }
-}
-
-function detectMemoryCommand(text){
-
- const lower=text.toLowerCase();
-
- if(lower.startsWith("recuerda que ")){
-  const info=text.substring(13).trim();
-
-  if(info){
-   memory.push(info);
-
-   if(memory.length>100)
-    memory=memory.slice(-100);
-
-   saveAll();
-
-   return "He guardado eso en mi memoria local.";
-  }
- }
-
- if(lower==="qué recuerdas"||lower==="que recuerdas"){
-  if(!memory.length)
-   return "No tengo recuerdos guardados todavía.";
-
-  return "Esto es lo que recuerdo:\n\n• "+memory.join("\n• ");
- }
-
- return null;
-}
-
-function needsWeb(text){
-
- if(!config.webSearch) return false;
- if(!navigator.onLine||config.offline) return false;
-
- const words=[
-  "hoy",
-  "ahora",
-  "actual",
-  "actualmente",
-  "últimas noticias",
-  "noticias",
-  "tiempo",
-  "clima",
-  "precio",
-  "precios",
-  "cotización",
-  "qué pasó",
-  "que paso",
-  "quién es",
-  "quien es",
-  "último",
-  "última",
-  "últimos",
-  "últimas",
-  "2026"
- ];
-
- const lower=text.toLowerCase();
-
- return words.some(w=>lower.includes(w));
-}
-
-async function sendMessage(){
-
- const text=input.value.trim();
-
- if(!text)return;
-
- input.value="";
-
- addMessage(text,"user");
-
- detectLearning(text);
-
- const mem=detectMemoryCommand(text);
-
- if(mem){
-  addMessage(mem,"bot");
-  speak(mem);
-  return;
- }
-
- const lower=text.toLowerCase();
 
  if(
-  lower.includes("hola")||
-  lower.includes("buenas")||
-  lower==="hey"
+  triggers.some(
+   x=>lower.includes(x)
+  )
  ){
-  const answer="¡Hola! 👋 Soy "+config.name+". ¿En qué te ayudo?";
-  addMessage(answer,"bot");
-  speak(answer);
-  return;
+
+  learning.push(text);
+
+  learning=
+   learning.slice(-100);
+
+  persist();
+
  }
 
- if(lower.includes("cómo te llamas")||lower.includes("como te llamas")){
-  const answer="Me llamo "+config.name+".";
-  addMessage(answer,"bot");
-  speak(answer);
-  return;
+}
+
+
+/* =========================
+   BORRAR MEMORIA
+========================= */
+
+$("deleteMemory").onclick=()=>{
+
+ memory=[];
+
+ persist();
+
+ add(
+  "Memoria borrada.",
+  "system"
+ );
+
+};
+
+
+$("deleteLearning").onclick=()=>{
+
+ learning=[];
+
+ persist();
+
+ add(
+  "Aprendizaje borrado.",
+  "system"
+ );
+
+};
+
+
+/* =========================
+   RESPUESTA OFFLINE
+========================= */
+
+function localAnswer(text){
+
+ const lower=
+  text.toLowerCase();
+
+
+ if(
+  lower.includes("cuánto es") ||
+  lower.includes("cuanto es")
+ ){
+
+  const expression=
+   text.replace(
+    /[^0-9+\-*/().]/g,
+    ""
+   );
+
+
+  try{
+
+   return "Resultado: "+
+    Function(
+     '"use strict";return('+
+     expression+
+     ")"
+    )();
+
+  }catch(e){}
+
  }
 
- addMessage("⏳ Pensando...","system");
+
+ return `
+Estoy offline.
+
+Puedo utilizar mi memoria, historial y funciones locales, pero necesito conexión para utilizar un modelo de IA completo y consultar información actual.
+`;
+
+}
+
+
+/* =========================
+   BUSCAR MODELO GRATUITO
+========================= */
+
+async function chooseFreeModel(){
 
  try{
 
-  const answer=await askAI(text);
+  const models=
+   await puter.ai.listModels();
 
-  const systems=document.querySelectorAll(".system");
-  if(systems.length)
-   systems[systems.length-1].remove();
+  const ids=
+   models
+   .map(m=>m.id)
+   .filter(Boolean);
 
-  addMessage(answer,"bot");
+
+  const free=
+   ids.filter(
+    id=>/:free$/i.test(id)
+   );
+
+
+  const preferred=[
+
+   "gpt-5.6-luna:free",
+
+   "gpt-5.5:free",
+
+   "gpt-5.4:free",
+
+   "gpt-5:free",
+
+   "claude-opus-4-8:free",
+
+   "claude-sonnet-4-5:free",
+
+   "gemini-2.5-pro:free",
+
+   "gemini-2.5-flash:free"
+
+  ];
+
+
+  for(
+   const id of preferred
+  ){
+
+   if(
+    free.includes(id)
+   ){
+
+    return id;
+
+   }
+
+  }
+
+
+  const gpt=
+   free.find(
+    id=>/^gpt/i.test(id)
+   );
+
+
+  if(gpt)return gpt;
+
+
+  if(free[0])
+   return free[0];
+
+
+ }catch(e){}
+
+
+ throw new Error(
+  "No hay un modelo gratuito disponible ahora mismo."
+ );
+
+}
+
+
+/* =========================
+   IA
+========================= */
+
+async function ai(text){
+
+ if(
+  cfg.offline ||
+  !navigator.onLine
+ ){
+
+  return localAnswer(text);
+
+ }
+
+
+ if(
+  !window.puter ||
+  !puter.ai
+ ){
+
+  throw new Error(
+   "El servicio de IA todavía no está disponible."
+  );
+
+ }
+
+
+ const system=`
+
+Eres ${cfg.name}, un asistente personal.
+
+PERSONALIDAD:
+${cfg.personality}
+
+INSTRUCCIONES:
+
+- Responde en español salvo que pidan otro idioma.
+- Sé preciso, natural y útil.
+- No inventes datos.
+- Si una pregunta depende de información reciente y la búsqueda web está activada, utiliza la búsqueda web.
+- Explica las cosas de forma clara.
+- No afirmes haber realizado acciones que realmente no hayas realizado.
+
+MEMORIA:
+${memory.map(
+ x=>"- "+x
+).join("\n") || "(vacía)"}
+
+APRENDIZAJE CONTROLADO:
+${learning.map(
+ x=>"- "+x
+).join("\n") || "(vacío)"}
+`;
+
+
+ const msgs=[
+
+  {
+   role:"system",
+   content:system
+  },
+
+  ...history.slice(-19)
+
+ ];
+
+
+ const model=
+  await chooseFreeModel();
+
+
+ const opts={
+  model:model
+ };
+
+
+ /*
+  La búsqueda web se activa
+  para modelos GPT compatibles.
+ */
+
+ if(
+  cfg.web &&
+  /^gpt/i.test(model)
+ ){
+
+  opts.tools=[
+   {
+    type:"web_search"
+   }
+  ];
+
+ }
+
+
+ const response=
+  await puter.ai.chat(
+   msgs,
+   opts
+  );
+
+
+ if(
+  typeof response==="string"
+ ){
+
+  return response;
+
+ }
+
+
+ return(
+  response?.message?.content ??
+  response?.content ??
+  response?.text ??
+  JSON.stringify(response)
+ );
+
+}
+
+
+/* =========================
+   ENVIAR
+========================= */
+
+async function send(){
+
+ const text=
+  $("input").value.trim();
+
+
+ if(!text)return;
+
+
+ $("input").value="";
+
+
+ add(
+  text,
+  "user"
+ );
+
+
+ learn(text);
+
+
+ const memoryResponse=
+  remember(text);
+
+
+ if(memoryResponse){
+
+  add(
+   memoryResponse,
+   "bot"
+  );
+
+  speak(
+   memoryResponse
+  );
+
+  return;
+
+ }
+
+
+ const loading=
+  add(
+   "⏳ Torres está pensando…",
+   "system",
+   false
+  );
+
+
+ try{
+
+  const answer=
+   await ai(text);
+
+
+  loading.remove();
+
+
+  add(
+   answer,
+   "bot"
+  );
+
+
   speak(answer);
+
 
  }catch(error){
 
-  const systems=document.querySelectorAll(".system");
-  if(systems.length)
-   systems[systems.length-1].remove();
+  loading.remove();
 
-  const answer=
-   "Ahora mismo no puedo acceder al servicio de IA online. "+
-   "Puedo seguir funcionando con mis funciones locales.";
 
-  addMessage(answer,"bot");
-  speak(answer);
- }
-}
+  add(
+`No he podido usar la IA online ahora mismo.
 
-async function askAI(text){
+${error?.message || "El servicio no respondió."}`,
+   "bot"
+  );
 
- const online=navigator.onLine&&!config.offline;
-
- if(!online){
-  return offlineAnswer(text);
  }
 
- /*
-  TorresAI intenta usar un servicio externo gratuito.
-  Estos servicios pueden cambiar sus condiciones o requerir
-  autenticación en el futuro.
- */
-
- const mode=needsWeb(text)?"gemini-search":"openai";
-
- const system=
- `Eres ${config.name}, un asistente personal.
- Personalidad: ${config.personality}
-
- Memoria local:
- ${memory.join("\n")}
-
- Aprendizaje:
- ${learning.map(x=>x.text).join("\n")}
-
- Responde en español salvo que el usuario pida otro idioma.
- Sé claro, útil y respetuoso.
- No inventes información.
- ${needsWeb(text)
- ? "Si tienes acceso a búsqueda web, utiliza información actual."
- : ""}`;
-
- const url=
- "https://text.pollinations.ai/"+
- encodeURIComponent(
-  system+"\n\nUsuario: "+text
- )+
- "?model="+encodeURIComponent(mode);
-
- const response=await fetch(url);
-
- if(!response.ok)
-  throw new Error("Servicio no disponible");
-
- const result=await response.text();
-
- if(!result.trim())
-  throw new Error("Respuesta vacía");
-
- return result.trim();
 }
 
-function offlineAnswer(text){
 
- const lower=text.toLowerCase();
+/* =========================
+   IMÁGENES
+========================= */
 
- if(lower.includes("hora")){
-  return "Puedo ayudarte con muchas tareas locales, pero para información actual como la hora exacta necesito consultar una fuente online.";
- }
+async function generate(){
 
- if(lower.includes("matemática")||
-    lower.includes("matematicas")||
-    lower.includes("cuánto es")||
-    lower.includes("cuanto es")){
+ const prompt=
+  $("imagePrompt")
+  .value
+  .trim();
 
-  try{
-   const expression=text
-    .replace(/[^0-9+\-*/().]/g,"");
-
-   if(expression){
-    const result=Function(
-     '"use strict";return ('+expression+')'
-    )();
-
-    return "Resultado: "+result;
-   }
-  }catch(e){}
- }
-
- return "Estoy en modo offline. Puedo utilizar mi memoria local, configuración, voz y algunas funciones del dispositivo, pero una conversación de IA completa necesita un modelo local integrado.";
-}
-
-function generateImage(){
-
- document.getElementById("imagePanel")
-  .classList.toggle("hidden");
-}
-
-function createImage(){
-
- const prompt=document.getElementById("imagePrompt").value.trim();
 
  if(!prompt)return;
 
- if(!navigator.onLine){
-  document.getElementById("imageResult").innerHTML=
-   "<p>Necesitas conexión a Internet para generar imágenes.</p>";
-  return;
+
+ const out=
+  $("imageResult");
+
+
+ out.textContent=
+  "🎨 Generando…";
+
+
+ try{
+
+  if(
+   !window.puter?.ai
+  ){
+
+   throw new Error(
+    "Puter.js no está disponible."
+   );
+
+  }
+
+
+  const image=
+   await puter.ai.txt2img(
+    prompt,
+    {
+     model:"gpt-image-2",
+     quality:"medium",
+     ratio:{
+      w:1,
+      h:1
+     }
+    }
+   );
+
+
+  out.innerHTML="";
+
+  out.appendChild(image);
+
+
+ }catch(e){
+
+  out.textContent=
+   "No se pudo generar la imagen: "+
+   (e?.message||"error");
+
  }
 
- const url=
- "https://image.pollinations.ai/prompt/"+
- encodeURIComponent(prompt)+
- "?width=1024&height=1024&nologo=true";
-
- document.getElementById("imageResult").innerHTML=
-  "<p>🎨 Generando...</p>"+
-  "<img src='"+url+"' alt='Imagen generada'>";
 }
 
-input.addEventListener("keydown",e=>{
- if(e.key==="Enter"&&!e.shiftKey){
-  e.preventDefault();
-  sendMessage();
- }
-});
 
-loadSettings();
-updateStatus();
-welcome();
+/* =========================
+   ARCHIVOS
+========================= */
+
+async function handleFile(file){
+
+ $("filePanel")
+  .classList
+  .remove("hidden");
+
+
+ $("fileInfo").textContent=
+  file.name+
+  " · "+
+  Math.round(file.size/1024)+
+  " KB";
+
+
+ const out=
+  $("fileResult");
+
+
+ out.textContent=
+  "⏳ Analizando…";
+
+
+ try{
+
+  if(
+   file.type.startsWith("image/")
+  ){
+
+   if(!puter?.ai){
+
+    throw new Error(
+     "IA no disponible"
+    );
+
+   }
+
+
+   const result=
+    await puter.ai.img2txt(
+     file
+    );
+
+
+   out.textContent=
+    result;
+
+
+  }else{
+
+   const text=
+    await file.text();
+
+
+   const clipped=
+    text.slice(0,50000);
+
+
+   out.textContent=
+    clipped;
+
+
+   if(
+    clipped.trim()
+   ){
+
+    $("input").value=
+`Analiza este archivo:
+
+${clipped.slice(0,12000)}`;
+
+
+    add(
+     "📎 He cargado "+
+     file.name+
+     ". Puedes pedirme que lo analice.",
+     "system"
+    );
+
+   }
+
+  }
+
+
+ }catch(e){
+
+  out.textContent=
+   "No pude analizar el archivo: "+
+   (e?.message||"error");
+
+ }
+
+}
+
+
+/* =========================
+   BOTONES
+========================= */
+
+$("send").onclick=
+ send;
+
+
+$("input").addEventListener(
+ "keydown",
+ e=>{
+
+  if(
+   e.key==="Enter" &&
+   !e.shiftKey
+  ){
+
+   e.preventDefault();
+
+   send();
+
+  }
+
+ });
+
+
+$("settingsBtn").onclick=
+ ()=>{
+
+  $("settings")
+   .classList
+   .toggle("hidden");
+
+  loadCfg();
+
+ };
+
+
+$("saveSettings").onclick=
+ saveCfg;
+
+
+$("clearBtn").onclick=
+ ()=>{
+
+  history=[];
+
+  persist();
+
+  renderHistory();
+
+ };
+
+
+$("imageBtn").onclick=
+ ()=>{
+
+  $("imagePanel")
+   .classList
+   .toggle("hidden");
+
+ };
+
+
+$("generateImage").onclick=
+ generate;
+
+
+$("fileBtn").onclick=
+ ()=>{
+
+  $("fileInput").click();
+
+ };
+
+
+$("fileInput").onchange=
+ e=>{
+
+  if(
+   e.target.files[0]
+  ){
+
+   handleFile(
+    e.target.files[0]
+   );
+
+  }
+
+ };
+
+
+/* =========================
+   MICRÓFONO
+========================= */
+
+$("mic").onclick=()=>{
+
+ const Recognition=
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+
+ if(!Recognition){
+
+  add(
+   "El reconocimiento de voz no está disponible en este navegador.",
+   "system"
+  );
+
+  return;
+
+ }
+
+
+ const recognition=
+  new Recognition();
+
+
+ recognition.lang=
+  "es-ES";
+
+
+ recognition.onresult=
+  e=>{
+
+   $("input").value=
+    e.results[0][0].transcript;
+
+   send();
+
+  };
+
+
+ recognition.onerror=
+  ()=>{
+
+   add(
+    "No pude acceder al micrófono.",
+    "system"
+   );
+
+  };
+
+
+ recognition.start();
+
+};
+
+
+/* =========================
+   INICIO
+========================= */
+
+loadCfg();
+
+status();
+
+renderHistory();
+
+
+/* =========================
+   SERVICE WORKER
+========================= */
+
+if(
+ "serviceWorker" in navigator
+){
+
+ navigator.serviceWorker
+  .register("./sw.js")
+  .catch(
+   ()=>{}
+  );
+
+}
 
 </script>
 
