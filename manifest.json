@@ -1,0 +1,12 @@
+{
+  "name": "TorresAI",
+  "short_name": "TorresAI",
+  "description": "Asistente personal TorresAI",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#d00000",
+  "orientation": "portrait",
+  "icons": []
+}
